@@ -24,6 +24,9 @@ export function buildTierLayout() {
     const tierKey = tier.key;
     const lowerKey = index > 0 ? tierData[index - 1].key : null;
 
+    // Softlock kilobyte tier behind 50 cycles
+    if (tier.key === "kilobyte" && (gameState.meta.prestigeCurrency || 0) < 50) return;
+
     if (
       lowerKey &&
       !gameState.systems.revealedTiers[tierKey] &&
@@ -52,17 +55,38 @@ export function buildTierLayout() {
   });
 }
 
-/**
- * Updates upgrades and conversion controls for all active tiers.
- */
 function renderTiers() {
   tierData.forEach((tier, index) => {
+    const tierKey = tier.key;
+    const lowerKey = index > 0 ? tierData[index - 1].key : null;
+    // Softlock kilobyte tier behind 50 cycles
+    if (tier.key === "kilobyte" && (gameState.meta.prestigeCurrency || 0) < 50) return;
+    // Reveal new tier if threshold met
+    if (
+      lowerKey &&
+      !gameState.systems.revealedTiers[tierKey] &&
+      (gameState.resources[lowerKey] || 0) >= tier.threshold
+    ) {
+      gameState.systems.revealedTiers[tierKey] = true;
+      // Create the tier section if it doesn't exist
+      if (!document.getElementById(`tier-${tierKey}`)) {
+        const container = document.getElementById("tiers");
+        const section = document.createElement("div");
+        section.className = "tier fade-in";
+        section.id = `tier-${tierKey}`;
+        const header = document.createElement("h2");
+        header.textContent = `${tier.name} Tier`;
+        section.appendChild(header);
+        const list = document.createElement("div");
+        list.className = "upgrade-list";
+        section.appendChild(list);
+        container.appendChild(section);
+      }
+    }
     const section = document.getElementById(`tier-${tier.key}`);
     if (!section) return;
-
     const list = section.querySelector(".upgrade-list");
     list.innerHTML = "";
-
     renderUpgrades(list, tier);
     renderConversions(section, tier, index);
     if (tier.key === "bit") renderBitButton(section);

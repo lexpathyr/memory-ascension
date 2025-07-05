@@ -4,11 +4,10 @@ export const tierSchemas = [
     name: "Bit",
     threshold: 0,
     upgrades: [
-      "bitDoubler",
-      "bitAutoClicker",
-      "clickBonus",
-      "bitAmplifier",
-      "pulseShaper"
+      "bitDoubler", // +1 bit per click
+      "bitAutoClicker", // Generate 0.5 bits/sec
+      "bitAmplifier", // x2 manual gain
+      "pulseShaper" // Bit gen +25%
     ]
   },
   {
@@ -16,12 +15,10 @@ export const tierSchemas = [
     name: "Nibble",
     threshold: 100,
     upgrades: [
-      "nibbleCombiner",
-      "nibbleEfficiency",
-      "nibbleConvertMax",
-      "nibbleAutoMax",
-      "nibbleBoost",
-      "nibbleShift"
+      "nibbleCombiner", // Auto-convert bits → nibbles
+      "nibbleEfficiency", // +25% nibble yield
+      "nibbleConvertMax", // Unlock Convert Max: Bits → Nibbles
+      "nibbleAutoMax" // Auto-Convert Max: Bits → Nibbles
     ]
   },
   {
@@ -29,12 +26,11 @@ export const tierSchemas = [
     name: "Byte",
     threshold: 100,
     upgrades: [
-      "byteAssembler",
-      "byteEfficiency",
-      "byteConvertMax",
-      "byteAutoMax",
-      "byteCache",
-      "byteBonus"
+      "byteAssembler", // Auto-convert nibbles → bytes
+      "byteEfficiency", // +25% byte yield
+      "byteConvertMax", // Unlock Convert Max: Nibbles → Bytes
+      "byteAutoMax", // Auto-Convert Max: Nibbles → Bytes
+      "byteCache" // +20% global multiplier
     ]
   },
   {
@@ -48,7 +44,8 @@ export const tierSchemas = [
       "kiloAutoMax",
       "threadOptimizer",
       "quantumBuffer"
-    ]
+    ],
+    unlockCycles: 50 // Softlock: require 50 cycles to reveal
   },
   {
     key: "megabyte",

@@ -36,7 +36,8 @@ const defaultSystems = {
   globalMultiplier: 1,
   globalConversionSpeed: 1000,
   revealedTiers: { bit: true },
-  passiveHooks: []
+  passiveHooks: [],
+  _passiveHookKeys: new Set()
 };
 
 const defaultMeta = {
@@ -49,6 +50,7 @@ const defaultMeta = {
 };
 
 // 🚀 Save game to localStorage
+// Save game to localStorage (serializes Sets as arrays)
 export function saveGame() {
   const saveData = {
     gameState: {
@@ -63,15 +65,16 @@ export function saveGame() {
         autoTradeBatches: { ...gameState.systems.autoTradeBatches },
         globalMultiplier: gameState.systems.globalMultiplier,
         globalConversionSpeed: gameState.systems.globalConversionSpeed
+        // passiveHooks and _passiveHookKeys are not saved (reconstructed on load)
       },
       meta: { ...gameState.meta }
     }
   };
-
   localStorage.setItem(SAVE_KEY, JSON.stringify(saveData));
 }
 
 // 🔄 Load game and merge with defaults
+// Load game and merge with defaults
 export function loadGame() {
   const saved = JSON.parse(localStorage.getItem(SAVE_KEY));
   if (!saved || !saved.gameState) return;
@@ -90,6 +93,9 @@ export function loadGame() {
     ...defaultSystems,
     ...(saved.gameState.systems || {})
   });
+  // Always reset passiveHooks and _passiveHookKeys on load
+  gameState.systems.passiveHooks = [];
+  gameState.systems._passiveHookKeys = new Set();
 
   Object.assign(gameState.meta, {
     ...defaultMeta,
@@ -99,11 +105,33 @@ export function loadGame() {
   gameState.upgrades.owned.clear();
   (saved.gameState.upgrades || []).forEach(key => gameState.upgrades.owned.add(key));
 
+  // Re-apply all upgrade effects
   tierData.forEach(tier => {
     tier.upgrades.forEach(upg => {
       if (gameState.upgrades.owned.has(upg.key)) {
         try {
-          upg.effect();
+          // Only apply autoConvert effect if toggle is not present in save
+          if (
+            typeof upg.effect === 'function' &&
+            upg.desc &&
+            upg.desc.toLowerCase().includes('auto-convert') &&
+            upg.key.endsWith('Assembler')
+          ) {
+            // Derive the convertKey from the upgrade
+            const match = upg.desc.match(/([a-z]+) → ([a-z]+)/i);
+            if (match) {
+              const from = match[1].toLowerCase();
+              const to = match[2].toLowerCase();
+              const convertKey = `${from}_to_${to}`;
+              if (!(convertKey in gameState.systems.autoConvertToggles)) {
+                upg.effect();
+              }
+            } else {
+              upg.effect(); // fallback
+            }
+          } else {
+            upg.effect();
+          }
         } catch (err) {
           console.warn(`Error applying upgrade: ${upg.key}`, err);
         }
@@ -117,7 +145,6 @@ export function loadGame() {
     return;
   }
 
-
   applyPartBonuses();
   checkUnlocks();
   refreshGameState();
@@ -125,6 +152,7 @@ export function loadGame() {
 }
 
 // 🧼 Reset game to default state
+// Reset game to default state
 export function resetGame() {
   if (!confirm("Are you sure? This will wipe everything.")) return;
 
@@ -133,6 +161,8 @@ export function resetGame() {
   Object.assign(gameState.resources, { ...defaultResources });
   Object.assign(gameState.generation, { ...defaultGeneration });
   Object.assign(gameState.systems, { ...defaultSystems });
+  gameState.systems.passiveHooks = [];
+  gameState.systems._passiveHookKeys = new Set();
   Object.assign(gameState.meta, { ...defaultMeta });
 
   gameState.upgrades.owned.clear();

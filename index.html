@@ -3,47 +3,55 @@
 <head>
   <meta charset="UTF-8" />
   <title>Memory Ascension</title>
-  <link rel="icon" href="images/favicon.ico" type="image/x-icon" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" href="images/favicon.ico" type="image/x-icon" />
   <link rel="stylesheet" href="main.css" />
 </head>
 <body>
-  <div class="sticky-header">
-    <div id="controls">
-      <button id="themeToggle">Light Mode</button>
-      <button id="exportBtn">Export Save</button>
-      <button id="importBtn">Import Save</button>
-      <input type="file" id="importFile" style="display:none;" />
-      <button id="resetBtn">Reset</button>
-    </div>
-    <h1 class="game-title">Memory Ascension</h1>
-    <div class="cycle-display">
+  <header class="sticky-header" role="banner">
+    <!-- Controls moved to footer -->
+    <h1 class="game-title" tabindex="0">Memory Ascension</h1>
+    <section class="cycle-display" aria-label="Cycle and resource display">
       <div class="recompile-wrapper">
-        <button id="recompileBtn">Recompile (Prestige)</button>
+        <button id="recompileBtn" aria-label="Recompile (Prestige)">Recompile (Prestige)</button>
       </div>
-      <div class="resource-display" id="resourceDisplay">Bits: 0</div>
+      <div class="resource-display" id="resourceDisplay" aria-live="polite">Bits: 0</div>
+    </section>
+  </header>
+
+  <nav id="tabNav" class="tab-nav" aria-label="Main navigation">
+    <button id="tabMemory" class="tab-button active" aria-controls="memoryPanel" aria-selected="true" tabindex="0">Memory</button>
+    <button id="tabTerminal" class="tab-button" style="display: none;" aria-controls="terminalPanel" aria-selected="false" tabindex="0">Computing</button>
+  </nav>
+
+  <main>
+    <section id="memoryPanel" aria-labelledby="tabMemory">
+      <div id="tiers"></div>
+    </section>
+    <section id="upgradeRack" class="upgrade-rack" aria-label="Upgrades"></section>
+    <section id="rigStatsDisplay" class="rig-stats" aria-label="Rig Stats"></section>
+    <section id="terminalPanel" class="terminal-panel" aria-labelledby="tabTerminal" hidden>
+      <button id="closeTerminal" class="terminal-close" aria-label="Close terminal">×</button>
+      <pre id="terminalOutput" tabindex="0">[terminal ready]</pre>
+      <input id="terminalInput" type="text" placeholder="> run optimizeMemory" autocomplete="off" aria-label="Terminal input" />
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer-controls-wrapper">
+      <div class="controls-dropdown controls-footer">
+        <button id="controlsToggle" aria-haspopup="true" aria-expanded="false" aria-controls="controlsMenu" aria-label="Show game controls">☰ Controls</button>
+        <nav id="controlsMenu" class="controls-menu controls-menu-up" aria-label="Game controls" hidden>
+          <button id="themeToggle" aria-label="Toggle light/dark mode">Light Mode</button>
+          <button id="exportBtn" aria-label="Export save">Export Save</button>
+          <button id="importBtn" aria-label="Import save">Import Save</button>
+          <input type="file" id="importFile" style="display:none;" aria-label="Import file" />
+          <button id="resetBtn" aria-label="Reset game">Reset</button>
+        </nav>
+      </div>
     </div>
-  </div>
-
-  <div id="tabNav" class="tab-nav">
-    <button id="tabMemory" class="tab-button active">Memory</button>
-    <button id="tabTerminal" class="tab-button" style="display: none;">Computing</button>
-  </div>
-
-  <!-- Memory Panel -->
-  <div id="memoryPanel">
-    <div id="tiers"></div>
-  </div>
-
-  <div id="upgradeRack" class="upgrade-rack"></div>
-  <div id="rigStatsDisplay" class="rig-stats"></div>
-
-  <!-- Terminal Panel -->
-  <div id="terminalPanel" class="terminal-panel">
-    <button id="closeTerminal" class="terminal-close">×</button>
-    <pre id="terminalOutput">[terminal ready]</pre>
-    <input id="terminalInput" type="text" placeholder="> run optimizeMemory" autocomplete="off" />
-  </div>
+    <span class="footer-copyright">© 2025 Memory Ascension</span>
+  </footer>
 
   <script type="module">
     import { loadGame, saveGame, importSave, exportSave, resetGame, handleImportFile } from './scripts/managers/saveManager.js';
@@ -73,8 +81,10 @@
       setInterval(saveGame, 3000);
 
       setTimeout(() => {
-        if ((gameState.meta.prestigeCurrency || 0) >= 50) {
+        if (gameState.meta.computingTabUnlocked) {
           document.getElementById("tabTerminal").style.display = "inline-block";
+        } else {
+          document.getElementById("tabTerminal").style.display = "none";
         }
       }, 100);
 
@@ -161,10 +171,10 @@
           if (program) {
             const isRunning = runProgram(program);
             if (isRunning) {
-              terminalOutput.textContent += `\nRunning "${program.name}"...`;
+              terminalOutput.textContent += `\nRunning \"${program.name}\"...`;
             }
           } else {
-            terminalOutput.textContent += `\nProgram not found: "${key}"`;
+            terminalOutput.textContent += `\nProgram not found: \"${key}\"`;
           }
           return;
         }
@@ -193,8 +203,32 @@
           return;
         }
 
-        terminalOutput.textContent += `\nUnknown command: "${command}"`;
+        terminalOutput.textContent += `\nUnknown command: \"${command}\"`;
         terminalOutput.scrollTop = terminalOutput.scrollHeight;
+      });
+
+      // Dropdown controls logic (moved inside window.onload)
+      const controlsToggle = document.getElementById("controlsToggle");
+      const controlsMenu = document.getElementById("controlsMenu");
+      controlsMenu.setAttribute("hidden", ""); // Ensure hidden by default
+      controlsToggle.setAttribute("aria-expanded", "false");
+      controlsToggle.onclick = (e) => {
+        e.stopPropagation();
+        const expanded = controlsMenu.hasAttribute("hidden") ? false : true;
+        if (expanded) {
+          controlsMenu.setAttribute("hidden", "");
+          controlsToggle.setAttribute("aria-expanded", "false");
+        } else {
+          controlsMenu.removeAttribute("hidden");
+          controlsToggle.setAttribute("aria-expanded", "true");
+        }
+      };
+      // Close dropdown when clicking outside
+      document.addEventListener("click", (e) => {
+        if (!controlsMenu.contains(e.target) && e.target !== controlsToggle) {
+          controlsMenu.setAttribute("hidden", "");
+          controlsToggle.setAttribute("aria-expanded", "false");
+        }
       });
     };
   </script>

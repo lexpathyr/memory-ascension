@@ -1,6 +1,8 @@
 // gameState.js
 
+// Main game state object
 export const gameState = {
+  // All player resources by tier
   resources: {
     bit: 0,
     nibble: 0,
@@ -12,8 +14,9 @@ export const gameState = {
     petabyte: 0
   },
 
+  // Upgrade state
   upgrades: {
-    owned: new Set(),
+    owned: new Set(), // Set of owned upgrade keys (serialize as array for save/load)
     conversionBonuses: {
       nibble: 1,
       byte: 1,
@@ -25,6 +28,7 @@ export const gameState = {
     }
   },
 
+  // Generation and conversion state
   generation: {
     manualGain: 1,
     bitGenAmount: 0,
@@ -42,6 +46,7 @@ export const gameState = {
     }
   },
 
+  // System-level automation, unlocks, and passive effects
   systems: {
     autoConvertToggles: {},
     autoConvertMaxUnlocked: {},
@@ -49,15 +54,34 @@ export const gameState = {
     autoTradeBatches: {},
     globalMultiplier: 1,
     revealedTiers: { bit: true },
-    passiveHooks: []
+    passiveHooks: [],
+    // Track which passive hooks have been added to prevent duplicates
+    _passiveHookKeys: new Set()
   },
 
+  // Meta/progression stats
   meta: {
     prestigeCurrency: 0,
     totalCycles: 0,
     processingPower: 0,
     speed: 1,
     memory: 16,
-    storageSlots: 1
+    storageSlots: 1,
+    // Add a new flag to track computing tab unlock
+    computingTabUnlocked: false
   }
 };
+
+// In your recompile (prestige) logic, after updating cycles:
+if (!gameState.meta.computingTabUnlocked && (gameState.meta.prestigeCurrency || 0) >= 50) {
+  gameState.meta.computingTabUnlocked = true;
+  // Optionally, show a notification to the player
+  setTimeout(() => {
+    alert('Computing tab unlocked! You can now access advanced programs.');
+  }, 200);
+}
+
+// In your window.onload or display update logic, use the boolean to show/hide the tab:
+if (gameState.meta.computingTabUnlocked) {
+  document.getElementById("tabTerminal").style.display = "inline-block";
+}

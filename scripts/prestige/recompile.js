@@ -10,14 +10,17 @@ export function recompile() {
     return;
   }
 
+  // Award prestige and update meta
   gameState.meta.prestigeCurrency += gained;
   gameState.meta.totalCycles = (gameState.meta.totalCycles || 0) + gained;
   gameState.systems.globalMultiplier += gained * 0.1;
 
+  // Reset all resources
   for (const key in gameState.resources) {
     gameState.resources[key] = 0;
   }
 
+  // Reset generation state
   Object.assign(gameState.generation, {
     manualGain: 1,
     bitGenAmount: 0,
@@ -27,6 +30,7 @@ export function recompile() {
     nibbleShift: false
   });
 
+  // Reset systems and automation
   Object.assign(gameState.systems, {
     autoConvertToggles: {},
     convertMaxUnlocked: {},
@@ -34,11 +38,15 @@ export function recompile() {
     autoTradeBatches: {},
     globalMultiplier: gameState.systems.globalMultiplier,
     globalConversionSpeed: 1000,
-    revealedTiers: { bit: true }
+    revealedTiers: { bit: true },
+    passiveHooks: [],
+    _passiveHookKeys: new Set()
   });
 
+  // Clear all upgrades
   gameState.upgrades.owned.clear();
 
+  // Clear and rebuild UI
   const container = document.getElementById("tiers");
   if (container) container.innerHTML = "";
 
@@ -46,9 +54,14 @@ export function recompile() {
   requestTierUpdate();
   updateDisplay();
 
-  const terminalTab = document.getElementById("tabTerminal");
-  if (terminalTab && gameState.meta.totalCycles >= 50) {
-    terminalTab.style.display = "inline-block";
+  // Show computing tab if enough cycles and not already unlocked
+  if (!gameState.meta.computingTabUnlocked && gameState.meta.totalCycles >= 50) {
+    gameState.meta.computingTabUnlocked = true;
+    const terminalTab = document.getElementById("tabTerminal");
+    if (terminalTab) terminalTab.style.display = "inline-block";
+    setTimeout(() => {
+      alert('Computing tab unlocked! You can now access advanced programs.');
+    }, 200);
   }
 
   alert(`Recompiled and gained ${gained} Cycles! Global boost increased.`);

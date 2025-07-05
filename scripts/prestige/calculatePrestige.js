@@ -1,28 +1,20 @@
 import { gameState } from '../core/gameState.js';
 import { cycleThreshold } from '../core/engine.js';
+import { RESOURCE_WEIGHTS } from '../core/utils.js';
 
+
+// Calculates the number of prestige cycles the player can earn based on total weighted resources.
 export function calculatePrestige() {
-  const weights = {
-    bit: 1,
-    nibble: 4,
-    byte: 16,
-    kilobyte: 64,
-    megabyte: 256,
-    gigabyte: 1024,
-    terabyte: 4096,
-    petabyte: 16384
-  };
-
-  // Total weighted data value (same as displayManager)
+  // Use shared weights for consistency
   let total = 0;
-  for (let tier in weights) {
-    total += (gameState.resources[tier] || 0) * weights[tier];
+  for (let tier in RESOURCE_WEIGHTS) {
+    total += (gameState.resources[tier] || 0) * RESOURCE_WEIGHTS[tier];
   }
+
 
   // Match dynamic threshold scaling
   let earnedCycles = 0;
   let threshold = 1000;
-
   while (total >= threshold) {
     earnedCycles++;
     threshold += cycleThreshold(earnedCycles);
@@ -35,5 +27,6 @@ export function calculatePrestige() {
     byteBonus = Math.floor(Math.log2(raw + 1));
   }
 
+  // Total prestige cycles = cycles from resources + byte bonus
   return earnedCycles + byteBonus;
 }

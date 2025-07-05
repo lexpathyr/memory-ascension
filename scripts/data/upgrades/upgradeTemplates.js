@@ -1,5 +1,15 @@
 import { gameState } from '../../core/gameState.js';
 
+// Utility to prevent duplicate passive hooks
+function addPassiveHook(key, fn) {
+  gameState.systems.passiveHooks = gameState.systems.passiveHooks || [];
+  if (!gameState.systems._passiveHookKeys) gameState.systems._passiveHookKeys = new Set();
+  if (!gameState.systems._passiveHookKeys.has(key)) {
+    gameState.systems.passiveHooks.push(fn);
+    gameState.systems._passiveHookKeys.add(key);
+  }
+}
+
 export const upgradeTemplates = {
   /**
    * Enables auto-conversion toggle for a tier combination.
@@ -26,20 +36,11 @@ export const upgradeTemplates = {
   },
 
   /**
-   * Registers a passive resource trade to be processed during tick updates.
-   */
-  resourceTrade: (from, to, batchSize) => () => {
-    const key = `${from}_to_${to}`;
-    gameState.systems.autoTradeBatches ??= {};
-    gameState.systems.autoTradeBatches[key] = batchSize;
-  },
-
-  /**
    * Activates a boolean feature flag inside the specified state section.
    * Defaults to the 'generation' section.
    */
   toggleFeature: (flagName, section = "generation") => () => {
-    if (gameState[section] && flagName in gameState[section]) {
+    if (gameState[section] && !gameState[section][flagName]) {
       gameState[section][flagName] = true;
     }
   },
@@ -66,26 +67,29 @@ export const upgradeTemplates = {
   /**
    * Adds a passive tick-based effect to run every gameTick.
    */
-  passiveEffect: (fn) => () => {
-    gameState.systems.passiveHooks ??= [];
-    gameState.systems.passiveHooks.push(fn);
+  passiveEffect: (fn, key = undefined) => () => {
+    if (key) {
+      addPassiveHook(key, fn);
+    } else {
+      gameState.systems.passiveHooks ??= [];
+      gameState.systems.passiveHooks.push(fn);
+    }
   },
 
 
   conversionBonus: (fromResource, bonusResource, perAmount, reward = 1) => () => {
-    const wrapper = () => {
-      const count = gameState.generation.conversionCounts[fromResource] ?? 0;
-
-      if (count > 0 && count % perAmount === 0) {
-        gameState.resources[bonusResource] = (gameState.resources[bonusResource] || 0) + reward;
+    addPassiveHook(
+      `conversionBonus_${fromResource}_${bonusResource}`,
+      () => {
+        const count = gameState.generation.conversionCounts[fromResource] ?? 0;
+        if (count > 0 && count % perAmount === 0) {
+          gameState.resources[bonusResource] = (gameState.resources[bonusResource] || 0) + reward;
+        }
+        if (count >= 1000) {
+          gameState.generation.conversionCounts[fromResource] = count % 1000;
+        }
       }
-
-      if (count >= 1000) {
-        gameState.generation.conversionCounts[fromResource] = count % 1000;
-      }
-    };
-    gameState.systems.passiveHooks ??= [];
-    gameState.systems.passiveHooks.push(wrapper);
+    );
   },
 
   /**
@@ -102,11 +106,13 @@ export const upgradeTemplates = {
    * Applies a scaling bonus to global multiplier based on resource amount.
    */
   scalingBoost: (resourceKey, rate) => () => {
-    gameState.systems.passiveHooks ??= [];
-    gameState.systems.passiveHooks.push(() => {
-      const amount = gameState.resources[resourceKey] || 0;
-      gameState.systems.globalMultiplier += amount * rate;
-    });
+    addPassiveHook(
+      `scalingBoost_${resourceKey}`,
+      () => {
+        const amount = gameState.resources[resourceKey] || 0;
+        gameState.systems.globalMultiplier += amount * rate;
+      }
+    );
   },
 
   /**
