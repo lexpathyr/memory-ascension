@@ -51,5 +51,27 @@ export const programDefinitions = {
     { byte: 2000, kilobyte: 800 },
     75,
     programTemplates.globalSpeedBoost(0.8)
-  )
+  ),
+
+  memoryDefragmenter: createProgram(
+    "memoryDefragmenter",
+    "Memory Defragmenter",
+    20,
+    { byte: 2000, kilobyte: 500 },
+    60,
+    programTemplates.temporaryBoost("bit", 1.5, 60),
+    false // time-based
+  ),
+
+  backgroundEncryptor: {
+    ...createProgram(
+      "backgroundEncryptor",
+      "Background Encryptor",
+      15,
+      { nibble: 3000, byte: 1000 },
+      null,
+      programTemplates.addPassiveYield("byte", 3)
+    ),
+    permanent: true
+  }
 };

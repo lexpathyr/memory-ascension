@@ -63,6 +63,7 @@ export const gameState = {
   meta: {
     prestigeCurrency: 0,
     totalCycles: 0,
+    computingPrestigeCount: 0,
     processingPower: 0,
     speed: 1,
     memory: 16,

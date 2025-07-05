@@ -160,7 +160,7 @@
         if (command === "status") {
           const running = getRunningPrograms();
           terminalOutput.textContent += running.length
-            ? running.map(p => `\n[${p.name}] ${p.timeRemaining}s left`).join("")
+            ? running.map(p => `\n[${p.name}] ${p.permanent ? 'Permanent' : p.timeRemaining + 's left'}` ).join("")
             : "\n(no running programs)";
           return;
         }
@@ -179,6 +179,19 @@
           return;
         }
 
+        if (command.startsWith("stop ")) {
+          const key = command.slice(5).trim();
+          const running = getRunningPrograms();
+          const prog = running.find(p => p.key === key);
+          if (prog) {
+            cancelProgram(key);
+            terminalOutput.textContent += `\nStopped program: "${prog.name}"`;
+          } else {
+            terminalOutput.textContent += `\nNo running program found with key: "${key}"`;
+          }
+          return;
+        }
+
         if (command === "list programs") {
           const unlockedProgramSet = new Set();
           programSchemas.forEach(schema => {
@@ -188,7 +201,15 @@
           });
           unlockedProgramSet.forEach(id => {
             const program = programDefinitions[id];
-            terminalOutput.textContent += `\n${id}: ${program.name}`;
+            let costStr = `Cycles: ${program.cost}`;
+            if (program.dataRequired) {
+              costStr += ", " + Object.entries(program.dataRequired).map(([k,v]) => `${v} ${k}`).join(", ");
+            }
+            let effectStr = program.permanent ? "Permanent effect" : (program.duration ? `Duration: ${program.duration}s` : "");
+            if (program.name && program.name.toLowerCase().includes("defragmenter")) effectStr += ", Boosts bit gain by 50%";
+            if (program.name && program.name.toLowerCase().includes("encryptor")) effectStr += ", +3 bytes/sec";
+            // You can add more custom effect descriptions here as needed
+            terminalOutput.textContent += `\n${id}: ${program.name} [${costStr}]${effectStr ? ` - ${effectStr}` : ""}`;
           });
           return;
         }
@@ -199,7 +220,30 @@
           terminalOutput.textContent += "\nhelp: Lists commands";
           terminalOutput.textContent += "\nlist programs: Lists available programs";
           terminalOutput.textContent += "\nrun 'program': Runs chosen program";
+          terminalOutput.textContent += "\nstop 'program': Stops chosen program execution";
           terminalOutput.textContent += "\nstatus: Shows running programs";
+          terminalOutput.textContent += "\ncompute prestige: Spend cycles to permanently increase all computing stats";
+          return;
+        }
+
+        if (command === "compute prestige") {
+          const baseCost = 300;
+          const timesPrestiged = gameState.meta.computingPrestigeCount || 0;
+          const cost = Math.floor(baseCost * Math.pow(1.5, timesPrestiged));
+          if ((gameState.meta.prestigeCurrency || 0) < cost) {
+            terminalOutput.textContent += `\nNot enough cycles. Computing prestige requires ${cost} cycles.`;
+            return;
+          }
+          gameState.meta.prestigeCurrency -= cost;
+          gameState.meta.computingPrestigeCount = timesPrestiged + 1;
+          gameState.meta.processingPower = (gameState.meta.processingPower || 0) + 1;
+          gameState.meta.speed = (gameState.meta.speed || 1) + 1;
+          gameState.meta.memory = (gameState.meta.memory || 0) + 1;
+          gameState.meta.storageSlots = (gameState.meta.storageSlots || 1) + 1;
+          terminalOutput.textContent += `\nComputing Prestige! All computing stats increased by 1. (${cost} cycles spent)`;
+          renderUpgradeRack();
+          requestTierUpdate();
+          updateDisplay();
           return;
         }
 

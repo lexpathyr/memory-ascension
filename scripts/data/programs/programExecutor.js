@@ -14,7 +14,14 @@ function isProgramUnlocked(key) {
 }
 
 export function runProgram(program) {
-  const { key, name, cost, dataRequired, duration, effect } = program;
+  const { key, name, cost, dataRequired, duration, effect, permanent } = program;
+
+  // Limit: Only allow as many programs as processingPower
+  const maxRunning = gameState.meta.processingPower || 1;
+  if ([...runningPrograms.values()].length >= maxRunning) {
+    alert(`You can only run ${maxRunning} programs at a time (Processing Power).`);
+    return false;
+  }
 
   if (!isProgramUnlocked(key)) {
     alert(`"${name}" has not been unlocked yet.`);
@@ -47,31 +54,24 @@ export function runProgram(program) {
   runningPrograms.set(key, {
     key,
     name,
-    timeRemaining: duration,
+    timeRemaining: permanent ? null : duration,
     totalDuration: duration,
     effect,
-    locked
+    locked,
+    permanent: !!permanent
   });
+
+  if (permanent) {
+    try { effect(); } catch (err) { console.warn(`Error running permanent program ${key}:`, err); }
+  }
 
   requestTierUpdate(); // for UI feedback
   return true;
 }
 
-export function cancelProgram(key) {
-  const prog = runningPrograms.get(key);
-  if (!prog) return;
-
-  // Refund locked data
-  for (let resource in prog.locked) {
-    gameState.resources[resource] += prog.locked[resource];
-  }
-
-  runningPrograms.delete(key);
-  requestTierUpdate();
-}
-
 export function tickPrograms() {
   for (let [key, prog] of runningPrograms) {
+    if (prog.permanent) continue;
     prog.timeRemaining -= 1;
 
     if (prog.timeRemaining <= 0) {
@@ -83,6 +83,20 @@ export function tickPrograms() {
       runningPrograms.delete(key);
     }
   }
+}
+
+export function cancelProgram(key) {
+  const prog = runningPrograms.get(key);
+  if (!prog) return;
+
+  // Refund locked data
+  for (let resource in prog.locked) {
+    gameState.resources[resource] += prog.locked[resource];
+  }
+
+  // Optionally: reverse permanent effect here if needed
+  runningPrograms.delete(key);
+  requestTierUpdate();
 }
 
 export function getRunningPrograms() {
