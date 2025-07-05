@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Memory Ascension</title>
+  <link rel="icon" href="images/favicon.ico" type="image/x-icon" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="main.css" />
+</head>
+<body>
+  <div class="sticky-header">
+    <div id="controls">
+      <button id="themeToggle">Light Mode</button>
+      <button id="exportBtn">Export Save</button>
+      <button id="importBtn">Import Save</button>
+      <input type="file" id="importFile" style="display:none;" />
+      <button id="resetBtn">Reset</button>
+    </div>
+    <h1 class="game-title">Memory Ascension</h1>
+    <div class="cycle-display">
+      <div class="recompile-wrapper">
+        <button id="recompileBtn">Recompile (Prestige)</button>
+      </div>
+      <div class="resource-display" id="resourceDisplay">Bits: 0</div>
+    </div>
+  </div>
+
+  <div id="tabNav" class="tab-nav">
+    <button id="tabMemory" class="tab-button active">Memory</button>
+    <button id="tabTerminal" class="tab-button" style="display: none;">Computing</button>
+  </div>
+
+  <!-- Memory Panel -->
+  <div id="memoryPanel">
+    <div id="tiers"></div>
+  </div>
+
+  <div id="upgradeRack" class="upgrade-rack"></div>
+  <div id="rigStatsDisplay" class="rig-stats"></div>
+
+  <!-- Terminal Panel -->
+  <div id="terminalPanel" class="terminal-panel">
+    <button id="closeTerminal" class="terminal-close">×</button>
+    <pre id="terminalOutput">[terminal ready]</pre>
+    <input id="terminalInput" type="text" placeholder="> run optimizeMemory" autocomplete="off" />
+  </div>
+
+  <script type="module">
+    import { loadGame, saveGame, importSave, exportSave, resetGame, handleImportFile } from './scripts/managers/saveManager.js';
+    import { updateDisplay } from './scripts/managers/displayManager.js';
+    import { toggleTheme, initializeThemeToggleText } from './scripts/managers/themeManager.js';
+    import { generateBit, gameTick } from './scripts/core/engine.js';
+    import { recompile } from './scripts/prestige/recompile.js';
+    import { runProgram, getRunningPrograms } from './scripts/data/programs/programExecutor.js';
+    import { programSchemas } from './scripts/data/programs/programSchemas.js';
+    import { programDefinitions } from './scripts/data/programs/programDefinitions.js';
+    import { gameState } from './scripts/core/gameState.js';
+    import { renderUpgradeRack } from './scripts/managers/rigManager.js';
+    import { buildTierLayout, requestTierUpdate } from './scripts/ui/uiRenderer.js';
+
+    window.onload = () => {
+      if (localStorage.getItem("lightMode") === "true") {
+        document.body.classList.add("light-mode");
+      }
+
+      loadGame();
+      buildTierLayout();
+      requestTierUpdate();
+      initializeThemeToggleText();
+
+      gameTick();
+      setInterval(gameTick, 100);
+      setInterval(saveGame, 3000);
+
+      setTimeout(() => {
+        if ((gameState.meta.prestigeCurrency || 0) >= 50) {
+          document.getElementById("tabTerminal").style.display = "inline-block";
+        }
+      }, 100);
+
+      document.getElementById("themeToggle").onclick = toggleTheme;
+      document.getElementById("recompileBtn").onclick = recompile;
+      document.getElementById("exportBtn").onclick = exportSave;
+      document.getElementById("importBtn").onclick = importSave;
+      document.getElementById("resetBtn").onclick = resetGame;
+      document.getElementById("importFile").onchange = handleImportFile;
+      window.generate = generateBit;
+      window.state = gameState;
+
+      const memoryTab = document.getElementById("tabMemory");
+      const terminalTab = document.getElementById("tabTerminal");
+      const memoryPanel = document.getElementById("memoryPanel");
+      const terminalPanel = document.getElementById("terminalPanel");
+      const terminalInput = document.getElementById("terminalInput");
+      const terminalOutput = document.getElementById("terminalOutput");
+
+      renderUpgradeRack();
+      document.getElementById("upgradeRack").style.display = "none";
+      document.getElementById("rigStatsDisplay").style.display = "none";
+
+      memoryTab.onclick = () => {
+        memoryTab.classList.add("active");
+        terminalTab.classList.remove("active");
+        memoryPanel.style.display = "block";
+        terminalPanel.classList.remove("visible");
+        document.getElementById("upgradeRack").style.display = "none";
+        document.getElementById("rigStatsDisplay").style.display = "none";
+      };
+
+      terminalTab.onclick = () => {
+        terminalTab.classList.add("active");
+        memoryTab.classList.remove("active");
+        memoryPanel.style.display = "none";
+        terminalPanel.classList.add("visible");
+        terminalInput.focus();
+        document.getElementById("upgradeRack").style.display = "flex";
+        document.getElementById("rigStatsDisplay").style.display = "flex";
+      };
+
+      document.getElementById("closeTerminal").onclick = () => {
+        terminalPanel.classList.remove("visible");
+        memoryTab.classList.add("active");
+        terminalTab.classList.remove("active");
+        memoryPanel.style.display = "block";
+        document.getElementById("upgradeRack").style.display = "none";
+        document.getElementById("rigStatsDisplay").style.display = "none";
+      };
+
+      terminalInput.addEventListener("keydown", (e) => {
+        if (e.key !== "Enter") return;
+
+        const command = terminalInput.value.trim();
+        terminalOutput.textContent += `\n> ${command}`;
+        terminalInput.value = "";
+
+        if (command === "exit" || command === "close") {
+          terminalOutput.textContent += "\nExiting terminal...";
+          terminalPanel.classList.remove("visible");
+          memoryPanel.style.display = "block";
+          memoryTab.classList.add("active");
+          terminalTab.classList.remove("active");
+          return;
+        }
+
+        if (command === "clear") {
+          terminalOutput.textContent = "[terminal ready]";
+          return;
+        }
+
+        if (command === "status") {
+          const running = getRunningPrograms();
+          terminalOutput.textContent += running.length
+            ? running.map(p => `\n[${p.name}] ${p.timeRemaining}s left`).join("")
+            : "\n(no running programs)";
+          return;
+        }
+
+        if (command.startsWith("run ")) {
+          const key = command.slice(4).trim();
+          const program = programDefinitions[key];
+          if (program) {
+            const isRunning = runProgram(program);
+            if (isRunning) {
+              terminalOutput.textContent += `\nRunning "${program.name}"...`;
+            }
+          } else {
+            terminalOutput.textContent += `\nProgram not found: "${key}"`;
+          }
+          return;
+        }
+
+        if (command === "list programs") {
+          const unlockedProgramSet = new Set();
+          programSchemas.forEach(schema => {
+            if ((gameState.meta.prestigeCurrency || 0) >= schema.unlockThreshold) {
+              schema.programs.forEach(id => unlockedProgramSet.add(id));
+            }
+          });
+          unlockedProgramSet.forEach(id => {
+            const program = programDefinitions[id];
+            terminalOutput.textContent += `\n${id}: ${program.name}`;
+          });
+          return;
+        }
+
+        if (command === "help") {
+          terminalOutput.textContent += "\nclear: Clears the terminal";
+          terminalOutput.textContent += "\nclose or exit: Closes the computing tab";
+          terminalOutput.textContent += "\nhelp: Lists commands";
+          terminalOutput.textContent += "\nlist programs: Lists available programs";
+          terminalOutput.textContent += "\nrun 'program': Runs chosen program";
+          terminalOutput.textContent += "\nstatus: Shows running programs";
+          return;
+        }
+
+        terminalOutput.textContent += `\nUnknown command: "${command}"`;
+        terminalOutput.scrollTop = terminalOutput.scrollHeight;
+      });
+    };
+  </script>
+
+</body>
+</html>
