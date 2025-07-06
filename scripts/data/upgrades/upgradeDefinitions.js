@@ -14,6 +14,7 @@ const bitTier = [
   ["clickBonus", "+3 bits every 5 clicks", 20, upgradeTemplates.toggleFeature("clickBonusActive")],
   ["bitAmplifier", "x2 manual gain", 40, () => gameState.generation.manualGain *= 2],
   ["pulseShaper", "Bit gen +25%", 60, () => gameState.generation.bitGenAmount *= 1.25],
+  ["bitOverclocker", "Bit gen +1/sec", 80, () => { gameState.generation.bitGenAmount += 1; }],
 ];
 
 // Nibble Tier Upgrades
@@ -41,6 +42,7 @@ const byteTier = [
   ["byteAutoMax", "Auto-Convert Max: Nibbles → Bytes", 400, upgradeTemplates.unlockAutoMax("nibble_to_byte")],
   ["byteCache", "+20% global multiplier", 450, upgradeTemplates.globalMultiplierBoost(0.2)],
   ["byteBonus", "Global multiplier scales with bytes held", 500, upgradeTemplates.scalingBoost("byte", 0.001)],
+  ["byteBitGenerator", "Generate 2 bits/sec", 600, () => { gameState.generation.bitGenAmount += 2; }],
 ];
 
 // Kilobyte Tier Upgrades
@@ -55,6 +57,7 @@ const kiloTier = [
   ["kiloAutoMax", "Auto-Convert Max: Bytes → Kilobytes", 800, upgradeTemplates.unlockAutoMax("byte_to_kilobyte")],
   ["threadOptimizer", "Kilobytes boost global multiplier", 850, upgradeTemplates.scalingBoost("kilobyte", 0.00075)],
   ["quantumBuffer", "+10% global multiplier", 950, upgradeTemplates.globalMultiplierBoost(0.1)],
+  ["kiloNibbleGenerator", "Generate 2 nibbles/sec", 1000, upgradeTemplates.passiveEffect(() => { gameState.resources.nibble = (gameState.resources.nibble || 0) + 2; }, "kiloNibbleGenerator")],
 ];
 
 // Megabyte Tier Upgrades
@@ -69,6 +72,7 @@ const megaTier = [
   ["megabyteAutoMax", "Auto-Convert Max: KB → MB", 1800, upgradeTemplates.unlockAutoMax("kilobyte_to_megabyte")],
   ["compileDaemon", "+10% megabyte yield", 2000, upgradeTemplates.bonusYield("megabyte", 1.25)],
   ["coreParallel", "Megabytes boost conversion efficiency", 2200, upgradeTemplates.scalingBoost("megabyte", 0.0015)],
+  ["megaByteGenerator", "Generate 2 bytes/sec", 2500, upgradeTemplates.passiveEffect(() => { gameState.resources.byte = (gameState.resources.byte || 0) + 2; }, "megaByteGenerator")],
 ];
 
 // Gigabyte Tier Upgrades
@@ -81,6 +85,7 @@ const gigaTier = [
   ["gigabyteConvertMax", "Unlock Convert Max: MB → GB", 4000, upgradeTemplates.unlockConvertMax("megabyte_to_gigabyte")],
   ["gigabyteAutoMax", "Auto-Convert Max: MB → GB", 4500, upgradeTemplates.unlockAutoMax("megabyte_to_gigabyte")],
   ["gigaframeCompressor", "+0.5 cycles per recompile", 4800, upgradeTemplates.passiveEffect(() => { gameState.meta.prestigeCurrency += 0.5; }, "gigaframeCompressor")],
+  ["gigaKilobyteGenerator", "Generate 2 kilobytes/sec", 5200, upgradeTemplates.passiveEffect(() => { gameState.resources.kilobyte = (gameState.resources.kilobyte || 0) + 2; }, "gigaKilobyteGenerator")],
 ];
 
 // Terabyte Tier Upgrades
@@ -93,6 +98,7 @@ const teraTier = [
   ["terabyteAutoMax", "Auto-Convert Max: GB → TB", 8000, upgradeTemplates.unlockAutoMax("gigabyte_to_terabyte")],
   ["terafluxBooster", "+25% TB yield", 8500, upgradeTemplates.bonusYield("terabyte", 1.25)],
   ["coreReactor", "+10% TB yield", 9000, upgradeTemplates.bonusYield("terabyte", 1.35)],
+  ["teraMegabyteGenerator", "Generate 2 megabytes/sec", 9500, upgradeTemplates.passiveEffect(() => { gameState.resources.megabyte = (gameState.resources.megabyte || 0) + 2; }, "teraMegabyteGenerator")],
 ];
 
 // Petabyte Tier Upgrades
@@ -105,6 +111,7 @@ const petaTier = [
   ["petabyteAutoMax", "Auto-Convert Max: TB → PB", 12500, upgradeTemplates.unlockAutoMax("terabyte_to_petabyte")],
   ["dataCondenser", "+30% PB yield", 13500, upgradeTemplates.bonusYield("petabyte", 1.3)],
   ["hyperscalarEngine", "+1 cycle per recompile", 15000, upgradeTemplates.passiveEffect(() => { gameState.meta.prestigeCurrency += 1; }, "hyperscalarEngine")],
+  ["petaGigabyteGenerator", "Generate 2 gigabytes/sec", 16000, upgradeTemplates.passiveEffect(() => { gameState.resources.gigabyte = (gameState.resources.gigabyte || 0) + 2; }, "petaGigabyteGenerator")],
 ];
 
 const allUpgrades = [

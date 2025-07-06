@@ -16,6 +16,8 @@ function recalculateGlobalMultiplier() {
   let base = 1 + (gameState.meta.prestigeCurrency || 0) * 0.1;
   // Add up all static bonuses from upgrades
   if (gameState.upgrades.owned.has('byteCache')) base += 0.2;
+  // Additive bonus: memory increases global multiplier (e.g., +0.05 per memory)
+  if (gameState.meta.memory) base += gameState.meta.memory * 0.05;
   // Add more static bonuses as needed...
   // Passive hooks (like scalingBoost) will add their effects below
   gameState.systems.globalMultiplier = base;
@@ -42,7 +44,9 @@ function processAutoGeneration() {
   if (gameState.generation.nibbleBoostEnabled) {
     multiplier += gameState.resources.nibble * 0.001;
   }
-  gameState.resources.bit += gameState.generation.bitGenAmount * multiplier;
+  // Speed increases auto-generation (e.g., +10% per speed)
+  let speedFactor = 1 + ((gameState.meta.speed || 0) * 0.1);
+  gameState.resources.bit += gameState.generation.bitGenAmount * multiplier * speedFactor;
 }
 
 function processAutoConversions() {

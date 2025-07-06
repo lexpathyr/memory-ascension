@@ -110,7 +110,8 @@ export const upgradeTemplates = {
       `scalingBoost_${resourceKey}`,
       () => {
         const amount = gameState.resources[resourceKey] || 0;
-        gameState.systems.globalMultiplier += amount * rate;
+        // Diminishing returns: log2 scaling
+        gameState.systems.globalMultiplier += Math.log2(amount + 1) * rate;
       }
     );
   },

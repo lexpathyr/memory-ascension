@@ -7,7 +7,8 @@ export const tierSchemas = [
       "bitDoubler", // +1 bit per click
       "bitAutoClicker", // Generate 0.5 bits/sec
       "bitAmplifier", // x2 manual gain
-      "pulseShaper" // Bit gen +25%
+      "pulseShaper", // Bit gen +25%
+      "bitOverclocker" // Bit gen +1/sec
     ]
   },
   {
@@ -30,7 +31,8 @@ export const tierSchemas = [
       "byteEfficiency", // +25% byte yield
       "byteConvertMax", // Unlock Convert Max: Nibbles → Bytes
       "byteAutoMax", // Auto-Convert Max: Nibbles → Bytes
-      "byteCache" // +20% global multiplier
+      "byteCache", // +20% global multiplier
+      "byteBitGenerator" // Generate 2 bits/sec
     ]
   },
   {
@@ -43,7 +45,8 @@ export const tierSchemas = [
       "kiloConvertMax",
       "kiloAutoMax",
       "threadOptimizer",
-      "quantumBuffer"
+      "quantumBuffer",
+      "kiloNibbleGenerator" // Generate 2 nibbles/sec
     ],
     unlockCycles: 50 // Softlock: require 50 cycles to reveal
   },
@@ -57,7 +60,8 @@ export const tierSchemas = [
       "megabyteConvertMax",
       "megabyteAutoMax",
       "compileDaemon",
-      "coreParallel"
+      "coreParallel",
+      "megaByteGenerator" // Generate 2 bytes/sec
     ]
   },
   {
@@ -69,7 +73,8 @@ export const tierSchemas = [
       "gigaEfficiency",
       "gigabyteConvertMax",
       "gigabyteAutoMax",
-      "gigaframeCompressor"
+      "gigaframeCompressor",
+      "gigaKilobyteGenerator" // Generate 2 kilobytes/sec
     ]
   },
   {
@@ -81,7 +86,8 @@ export const tierSchemas = [
       "terabyteConvertMax",
       "terabyteAutoMax",
       "terafluxBooster",
-      "coreReactor"
+      "coreReactor",
+      "teraMegabyteGenerator" // Generate 2 megabytes/sec
     ]
   },
   {
@@ -93,7 +99,8 @@ export const tierSchemas = [
       "petabyteConvertMax",
       "petabyteAutoMax",
       "dataCondenser",
-      "hyperscalarEngine"
+      "hyperscalarEngine",
+      "petaGigabyteGenerator" // Generate 2 gigabytes/sec
     ]
   }
 ];
