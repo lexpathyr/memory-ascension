@@ -241,6 +241,7 @@
           gameState.meta.memory = (gameState.meta.memory || 0) + 1;
           gameState.meta.storageSlots = (gameState.meta.storageSlots || 1) + 1;
           terminalOutput.textContent += `\nComputing Prestige! All computing stats increased by 1. (${cost} cycles spent)`;
+          if (window.applyPartBonuses) applyPartBonuses();
           renderUpgradeRack();
           requestTierUpdate();
           updateDisplay();

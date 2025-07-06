@@ -97,6 +97,15 @@ export function loadGame() {
   gameState.systems.passiveHooks = [];
   gameState.systems._passiveHookKeys = new Set();
 
+  // Merge meta, but always preserve the highest value for prestige stats
+  const metaKeys = ["processingPower", "speed", "memory", "storageSlots", "computingPrestigeCount", "prestigeCurrency", "totalCycles"];
+  for (const key of metaKeys) {
+    const savedVal = saved.gameState.meta && saved.gameState.meta[key];
+    const defaultVal = defaultMeta[key];
+    // Use the saved value if it exists, otherwise default
+    gameState.meta[key] = (typeof savedVal !== "undefined") ? savedVal : defaultVal;
+  }
+  // Merge any other meta fields (like computingTabUnlocked, etc)
   Object.assign(gameState.meta, {
     ...defaultMeta,
     ...(saved.gameState.meta || {})

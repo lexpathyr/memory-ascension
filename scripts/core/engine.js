@@ -101,12 +101,15 @@ function convertResources(from, to, amount, rate, bonus = 1, multiplier = 1) {
     console.warn(`Insufficient '${from}' resources. Required: ${cost}, Available: ${sourceAvailable}`);
     return;
   }
+  // Diminishing returns: apply a soft cap to output gain
+  // Formula: effectiveGain = gain ^ (1 - DR), where DR increases with amount
+  // Example: DR = Math.min(0.5, Math.log10(amount)/20)
+  let rawGain = amount * bonus * multiplier;
+  let diminishing = Math.min(0.5, Math.log10(Math.max(1, amount)) / 20);
+  let effectiveGain = rawGain ** (1 - diminishing);
   // Proceed with conversion
   gameState.resources[from] -= cost;
-  const rawGain = amount;
-  const finalGain = rawGain * bonus * multiplier;
-  // Safely apply target gain
-  gameState.resources[to] = (gameState.resources[to] || 0) + finalGain;
+  gameState.resources[to] = (gameState.resources[to] || 0) + effectiveGain;
   // Safe increment for conversionCounts
   gameState.generation.conversionCounts[to] = (gameState.generation.conversionCounts[to] || 0) + 1;
 }

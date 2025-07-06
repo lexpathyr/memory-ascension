@@ -77,11 +77,12 @@ export function renderUpgradeRack() {
 }
 
 export function applyPartBonuses() {
+  // Start from prestige values, not hardcoded base
   const base = {
-    processingPower: 0,
-    speed: 1,
-    memory: 0,
-    storageSlots: 1
+    processingPower: gameState.meta.processingPower || 0,
+    speed: gameState.meta.speed || 1,
+    memory: gameState.meta.memory || 0,
+    storageSlots: gameState.meta.storageSlots || 1
   };
 
   (gameState.meta.installedParts || []).forEach(id => {
@@ -104,7 +105,11 @@ export function applyPartBonuses() {
     `;
   }
 
-  Object.assign(gameState.meta, base);
+  // Only update the displayed stats, do not overwrite prestige values
+  gameState.meta.displayProcessingPower = base.processingPower;
+  gameState.meta.displaySpeed = base.speed;
+  gameState.meta.displayMemory = base.memory;
+  gameState.meta.displayStorageSlots = base.storageSlots;
 }
 
 function formatEffects(effects) {
