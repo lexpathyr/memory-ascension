@@ -36,7 +36,7 @@ export function updateDisplay() {
   const recompileBtn = document.getElementById("recompileBtn");
   if (recompileBtn) {
     const upcoming = calculatePrestige();
-    const estimatedBoost = (upcoming * 0.1).toFixed(2);
+    const estimatedBoost = upcoming * 0.1;
     recompileBtn.title = `Recompile to gain +${formatResource(estimatedBoost)}x global boost\nCurrent Multiplier: x${gameState.systems.globalMultiplier.toFixed(2)}`;
   }
 
