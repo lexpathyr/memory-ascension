@@ -1,3 +1,18 @@
+/**
+ * @fileoverview Defines the schema for each resource tier in Memory Ascension, including upgrade keys and unlock conditions.
+ * @module data/tiers/tierSchemas
+ */
+
+/**
+ * Array of tier schema objects, each representing a resource tier and its upgrade keys.
+ * @type {Array<{
+ *   key: string,
+ *   name: string,
+ *   threshold: number,
+ *   upgrades: string[],
+ *   unlockCycles?: number
+ * }>}
+ */
 export const tierSchemas = [
   {
     key: "bit",

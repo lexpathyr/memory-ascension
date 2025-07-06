@@ -1,13 +1,26 @@
-// utils.js
 
-// Capitalizes the first letter of a string, returns empty string for invalid input
+/**
+ * @fileoverview Utility functions and constants for Memory Ascension, including formatting, conversion, and resource weights.
+ * @module core/utils
+ */
+
+
+/**
+ * Capitalizes the first letter of a string.
+ * @param {string} word - The string to capitalize.
+ * @returns {string} Capitalized string, or empty string for invalid input.
+ */
 export function capitalize(word) {
   if (typeof word !== 'string' || word.length === 0) return '';
   return word.charAt(0).toUpperCase() + word.slice(1);
 }
 
 
-// Shared resource weights for display and conversion
+
+/**
+ * Shared resource weights for display and conversion.
+ * @type {Object.<string, number>}
+ */
 export const RESOURCE_WEIGHTS = {
   bit: 1,
   nibble: 4,
@@ -19,7 +32,13 @@ export const RESOURCE_WEIGHTS = {
   petabyte: 8 * 1024 * 1024 * 1024 * 1024 * 1024
 };
 
-// Returns the conversion rate from one resource to another, or null if invalid
+
+/**
+ * Returns the conversion rate from one resource to another, or null if invalid.
+ * @param {string} from - Source resource key.
+ * @param {string} to - Target resource key.
+ * @returns {number|null} Conversion rate, or null if invalid.
+ */
 export function conversionRate(from, to) {
   const fromRate = RESOURCE_WEIGHTS[from];
   const toRate = RESOURCE_WEIGHTS[to];
@@ -30,7 +49,12 @@ export function conversionRate(from, to) {
   return toRate / fromRate;
 }
 
-// Formats a number with suffixes (K, M, B, T, P) and thousands separators
+
+/**
+ * Formats a number with suffixes (K, M, B, T, P) and thousands separators.
+ * @param {number} value - The number to format.
+ * @returns {string} Formatted number string.
+ */
 export function formatNumber(value) {
   if (typeof value !== 'number' || isNaN(value)) return '0';
   if (value < 1e3) return Math.floor(value).toString();

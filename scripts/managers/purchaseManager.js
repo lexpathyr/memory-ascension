@@ -3,7 +3,17 @@ import { capitalize } from '../core/utils.js';
 import { refreshGameState } from './saveManager.js';
 import { requestTierUpdate } from '../ui/uiRenderer.js';
 
-// Attempts to purchase an upgrade using the specified resource
+/**
+ * @fileoverview Handles purchasing upgrades in Memory Ascension, including resource validation and effect application.
+ * @module managers/purchaseManager
+ */
+
+/**
+ * Attempts to purchase an upgrade using the specified resource.
+ * Deducts cost, applies effect, and updates state/UI.
+ * @param {Object} upg - Upgrade definition object.
+ * @param {string} resourceKey - Resource key to use for purchase.
+ */
 export function purchaseUpgrade(upg, resourceKey) {
   const currency = upg.currency || resourceKey;
   const playerHas = Math.floor(gameState.resources[currency] || 0);

@@ -1,6 +1,15 @@
+
+/**
+ * @fileoverview Handles the rig/parts system for Memory Ascension, including part installation, bonuses, and UI updates.
+ * @module managers/rigManager
+ */
+
 import { gameState } from '../core/gameState.js';
 import { computerParts } from '../data/parts/parts.js';
 
+/**
+ * Renders the upgrade rack UI, allowing installation and removal of computer parts.
+ */
 export function renderUpgradeRack() {
   const rack = document.getElementById("upgradeRack");
   if (!rack) return;
@@ -76,6 +85,9 @@ export function renderUpgradeRack() {
   rack.appendChild(slotRow);
 }
 
+/**
+ * Applies all installed part bonuses to the displayed rig stats, without overwriting prestige values.
+ */
 export function applyPartBonuses() {
   // Start from prestige values, not hardcoded base
   const base = {
@@ -112,12 +124,24 @@ export function applyPartBonuses() {
   gameState.meta.displayStorageSlots = base.storageSlots;
 }
 
+
+/**
+ * Formats the effects object into HTML for display.
+ * @param {Object<string, number>} effects - Effects to format.
+ * @returns {string} HTML string of effect lines.
+ */
 function formatEffects(effects) {
   return Object.entries(effects)
     .map(([key, value]) => `<div class="effect-line">+${value} ${capitalize(key)}</div>`)
     .join("");
 }
 
+
+/**
+ * Capitalizes the first letter of a string.
+ * @param {string} str - String to capitalize.
+ * @returns {string} Capitalized string.
+ */
 function capitalize(str) {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }

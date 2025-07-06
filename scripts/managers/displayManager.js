@@ -1,10 +1,17 @@
-// displayManager.js
+
+/**
+ * @fileoverview Handles updating the main resource and prestige display for Memory Ascension.
+ * @module managers/displayManager
+ */
 
 import { gameState } from '../core/gameState.js';
 import { capitalize, RESOURCE_WEIGHTS, formatNumber } from '../core/utils.js';
 import { calculatePrestige } from '../prestige/calculatePrestige.js';
 import { cycleThreshold } from '../core/engine.js';
 
+/**
+ * Updates the main resource and prestige display, including progress to next cycle and resource breakdown.
+ */
 export function updateDisplay() {
   const display = document.getElementById("resourceDisplay");
   // Calculate total weighted resources using shared weights
@@ -42,6 +49,12 @@ export function updateDisplay() {
   }
 }
 
+
+/**
+ * Formats a resource value with suffixes and two decimal places.
+ * @param {number} value - The value to format.
+ * @returns {string} Formatted value string.
+ */
 export function formatResource(value) {
   if (typeof value !== 'number' || isNaN(value)) return '0';
   if (value < 1e3) return value.toFixed(2);

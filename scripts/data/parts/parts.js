@@ -1,5 +1,19 @@
-// parts.js
 
+/**
+ * @fileoverview Defines all computer parts available in Memory Ascension, including their effects and metadata.
+ * @module data/parts/parts
+ */
+
+/**
+ * Array of computer part objects, each with id, name, description, icon, and effects.
+ * @type {Array<{
+ *   id: string,
+ *   name: string,
+ *   description: string,
+ *   icon: string,
+ *   effects: Object<string, number>
+ * }>}
+ */
 export const computerParts = [
   {
     id: "cpu",

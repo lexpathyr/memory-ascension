@@ -1,4 +1,8 @@
-// engine.js
+
+/**
+ * @fileoverview Main game engine logic for Memory Ascension. Handles ticks, resource generation, conversions, and manual actions.
+ * @module core/engine
+ */
 
 import { gameState } from './gameState.js';
 import { conversionRate, capitalize } from './utils.js';
@@ -10,21 +14,23 @@ import {
   requestTierUpdate
 } from '../ui/uiRenderer.js';
 
-// Recalculate the global multiplier from scratch each tick
+
+/**
+ * Recalculates the global multiplier from scratch each tick, including static and dynamic bonuses.
+ * Applies prestige, upgrades, memory, and passive hooks.
+ */
 function recalculateGlobalMultiplier() {
-  // Always include the persistent global boost from cycles (prestigeCurrency)
   let base = 1 + (gameState.meta.prestigeCurrency || 0) * 0.1;
-  // Add up all static bonuses from upgrades
   if (gameState.upgrades.owned.has('byteCache')) base += 0.2;
-  // Additive bonus: memory increases global multiplier (e.g., +0.05 per memory)
   if (gameState.meta.memory) base += gameState.meta.memory * 0.05;
-  // Add more static bonuses as needed...
-  // Passive hooks (like scalingBoost) will add their effects below
   gameState.systems.globalMultiplier = base;
-  // Now run all passive hooks to add dynamic bonuses
   (gameState.systems.passiveHooks ?? []).forEach(fn => fn());
 }
 
+
+/**
+ * Main game tick function. Updates all game systems and UI.
+ */
 export function gameTick() {
   recalculateGlobalMultiplier();
   processAutoGeneration();
@@ -35,61 +41,79 @@ export function gameTick() {
   updateTiersIfDirty();
 }
 
+
+/**
+ * Returns the prestige cycle threshold for a given cycle count.
+ * @param {number} cycleCount
+ * @returns {number}
+ */
 export function cycleThreshold(cycleCount) {
   return 1000 * Math.pow(1.5, cycleCount);
 }
 
+
+/**
+ * Processes automatic bit generation, applying multipliers and speed bonuses.
+ */
 function processAutoGeneration() {
   let multiplier = gameState.systems.globalMultiplier;
   if (gameState.generation.nibbleBoostEnabled) {
     multiplier += gameState.resources.nibble * 0.001;
   }
-  // Speed increases auto-generation (e.g., +10% per speed)
   let speedFactor = 1 + ((gameState.meta.speed || 0) * 0.1);
   gameState.resources.bit += gameState.generation.bitGenAmount * multiplier * speedFactor;
 }
 
+/**
+ * Processes all enabled auto-conversions for resources, including max conversions if unlocked.
+ */
 function processAutoConversions() {
   for (const key in gameState.systems.autoConvertToggles) {
-    // Only process base toggles, skip any _max keys
     if (key.endsWith('_max')) continue;
     const toggleState = gameState.systems.autoConvertToggles[key];
-    // Debug: log the state of each toggle
     console.debug(`[AutoConvert] ${key}: ${toggleState}`);
     if (!toggleState) continue;
-
     const [from, , to] = key.split("_");
     const runMax = gameState.systems.autoConvertToggles[key + "_max"];
     const bonus = gameState.upgrades.conversionBonuses[to] || 1;
     const ratio = conversionRate(from, to);
     const available = Math.floor(gameState.resources[from] / ratio);
     if (available <= 0) continue;
-
-    // Only run max if both base and max toggles are true and max is unlocked
     const conversions = runMax && gameState.systems.autoConvertMaxUnlocked[key]
       ? available
       : 1;
-
-    // Debug: log which conversion is actually running
     console.debug(`[AutoConvert] Running: ${from} → ${to} | conversions: ${conversions}`);
+
     convertResources(from, to, conversions, ratio, bonus, gameState.systems.globalMultiplier);
   }
 }
 
+
+/**
+ * Processes all enabled auto-trades, converting resources in batches.
+ */
 function processAutoTrades() {
   for (const key in gameState.systems.autoTradeBatches) {
     const [from, to] = key.split("_to_");
     const batchSize = gameState.systems.autoTradeBatches[key] || 1;
     const batchesAvailable = Math.floor(gameState.resources[from] / batchSize);
     if (batchesAvailable <= 0) continue;
-
     gameState.resources[from] -= batchesAvailable * batchSize;
     gameState.resources[to] = (gameState.resources[to] || 0) + batchesAvailable;
   }
 }
 
+
+/**
+ * Converts resources from one type to another, applying bonuses, multipliers, and diminishing returns.
+ * @param {string} from - Source resource key.
+ * @param {string} to - Target resource key.
+ * @param {number} amount - Amount to convert.
+ * @param {number} rate - Conversion rate.
+ * @param {number} [bonus=1] - Yield bonus multiplier.
+ * @param {number} [multiplier=1] - Global multiplier.
+ */
 function convertResources(from, to, amount, rate, bonus = 1, multiplier = 1) {
-  // Validate source and target keys
   if (!(from in gameState.resources)) {
     console.warn(`Conversion skipped: source '${from}' is missing in resources.`);
     return;
@@ -100,7 +124,6 @@ function convertResources(from, to, amount, rate, bonus = 1, multiplier = 1) {
   }
   const cost = rate * amount;
   const sourceAvailable = gameState.resources[from];
-  // Ensure sufficient resources
   if (typeof sourceAvailable !== "number" || sourceAvailable < cost) {
     console.warn(`Insufficient '${from}' resources. Required: ${cost}, Available: ${sourceAvailable}`);
     return;
@@ -111,13 +134,17 @@ function convertResources(from, to, amount, rate, bonus = 1, multiplier = 1) {
   let rawGain = amount * bonus * multiplier;
   let diminishing = Math.min(0.5, Math.log10(Math.max(1, amount)) / 20);
   let effectiveGain = rawGain ** (1 - diminishing);
-  // Proceed with conversion
   gameState.resources[from] -= cost;
   gameState.resources[to] = (gameState.resources[to] || 0) + effectiveGain;
-  // Safe increment for conversionCounts
   gameState.generation.conversionCounts[to] = (gameState.generation.conversionCounts[to] || 0) + 1;
 }
 
+
+/**
+ * Handles manual single conversion from one resource to another.
+ * @param {string} from - Source resource key.
+ * @param {string} to - Target resource key.
+ */
 export function manualConvert(from, to) {
   const rate = conversionRate(from, to);
   if (!rate || isNaN(rate) || rate <= 0) {
@@ -135,6 +162,12 @@ export function manualConvert(from, to) {
   updateDisplay();
 }
 
+
+/**
+ * Handles manual max conversion from one resource to another.
+ * @param {string} from - Source resource key.
+ * @param {string} to - Target resource key.
+ */
 export function manualConvertMax(from, to) {
   const rate = conversionRate(from, to);
   if (!rate || isNaN(rate) || rate <= 0) {
@@ -154,19 +187,20 @@ export function manualConvertMax(from, to) {
   updateDisplay();
 }
 
+
+/**
+ * Handles manual bit generation (click), applying multipliers and click bonuses.
+ */
 export function generateBit() {
   gameState.generation.clickCounter++;
-
   const multiplier = gameState.systems.globalMultiplier +
     (gameState.generation.nibbleBoostEnabled
       ? gameState.resources.nibble * 0.001
       : 0);
-
   if (gameState.generation.clickBonusActive && gameState.generation.clickCounter >= 5) {
     gameState.resources.bit += 5 * multiplier;
     gameState.generation.clickCounter = 0;
   }
-
   gameState.resources.bit += gameState.generation.manualGain * multiplier;
   requestTierUpdate();
 }

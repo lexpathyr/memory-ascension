@@ -1,8 +1,17 @@
+
+/**
+ * @fileoverview Handles the prestige (recompile) action for Memory Ascension, resetting progress and awarding cycles.
+ * @module prestige/recompile
+ */
+
 import { gameState } from '../core/gameState.js';
 import { calculatePrestige } from './calculatePrestige.js';
 import { updateDisplay } from '../managers/displayManager.js';
 import { buildTierLayout, requestTierUpdate } from '../ui/uiRenderer.js';
 
+/**
+ * Performs the prestige (recompile) action, resetting resources and upgrades, awarding cycles, and updating the UI.
+ */
 export function recompile() {
   const gained = calculatePrestige();
   if (gained === 0) {

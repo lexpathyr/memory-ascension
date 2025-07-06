@@ -1,3 +1,9 @@
+
+/**
+ * @fileoverview Handles rendering and updating the tier UI, upgrades, and conversion controls for Memory Ascension.
+ * @module ui/uiRenderer
+ */
+
 import { gameState } from '../core/gameState.js';
 import { tierData } from '../data/tiers/tierData.js';
 import { capitalize, conversionRate } from '../core/utils.js';
@@ -6,10 +12,16 @@ import { manualConvert, manualConvertMax, generateBit } from '../core/engine.js'
 
 let tierUpdatePending = true;
 
+/**
+ * Requests a tier UI update on the next tick.
+ */
 export function requestTierUpdate() {
   tierUpdatePending = true;
 }
 
+/**
+ * Updates the tier UI if a tier update is pending.
+ */
 export function updateTiersIfDirty() {
   if (tierUpdatePending) {
     renderTiers();
@@ -17,16 +29,15 @@ export function updateTiersIfDirty() {
   }
 }
 
+/**
+ * Builds the initial tier layout in the UI, creating sections for each revealed tier.
+ */
 export function buildTierLayout() {
   const container = document.getElementById("tiers");
-
   tierData.forEach((tier, index) => {
     const tierKey = tier.key;
     const lowerKey = index > 0 ? tierData[index - 1].key : null;
-
-    // Softlock kilobyte tier behind 50 cycles
     if (tier.key === "kilobyte" && (gameState.meta.prestigeCurrency || 0) < 50) return;
-
     if (
       lowerKey &&
       !gameState.systems.revealedTiers[tierKey] &&
@@ -34,27 +45,26 @@ export function buildTierLayout() {
     ) {
       gameState.systems.revealedTiers[tierKey] = true;
     }
-
     if (!gameState.systems.revealedTiers[tierKey]) return;
-
     if (!document.getElementById(`tier-${tierKey}`)) {
       const section = document.createElement("div");
       section.className = "tier fade-in";
       section.id = `tier-${tierKey}`;
-
       const header = document.createElement("h2");
       header.textContent = `${tier.name} Tier`;
       section.appendChild(header);
-
       const list = document.createElement("div");
       list.className = "upgrade-list";
       section.appendChild(list);
-
       container.appendChild(section);
     }
   });
 }
 
+/**
+ * Renders all revealed tiers, upgrades, and conversion controls in the UI.
+ * @private
+ */
 function renderTiers() {
   tierData.forEach((tier, index) => {
     const tierKey = tier.key;
@@ -93,6 +103,12 @@ function renderTiers() {
   });
 }
 
+/**
+ * Renders the list of available upgrades for a tier.
+ * @param {HTMLElement} listEl - The element to render upgrades into.
+ * @param {Object} tier - The tier data object.
+ * @private
+ */
 function renderUpgrades(listEl, tier) {
   const tierKey = tier.key;
 
@@ -120,6 +136,13 @@ function renderUpgrades(listEl, tier) {
   });
 }
 
+/**
+ * Renders conversion buttons and auto-convert controls for a tier.
+ * @param {HTMLElement} section - The tier section element.
+ * @param {Object} tier - The tier data object.
+ * @param {number} index - The index of the tier in tierData.
+ * @private
+ */
 function renderConversions(section, tier, index) {
   // Clear previous buttons
   [...section.querySelectorAll(".conversion-button, .toggle-button, label.slider-label")].forEach(el => el.remove());
@@ -189,6 +212,11 @@ function renderConversions(section, tier, index) {
   }
 }
 
+/**
+ * Renders the manual bit generation button for the bit tier.
+ * @param {HTMLElement} section - The tier section element.
+ * @private
+ */
 function renderBitButton(section) {
   const bitBtn = document.createElement("button");
   bitBtn.className = "conversion-button";

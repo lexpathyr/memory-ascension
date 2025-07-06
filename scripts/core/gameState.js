@@ -1,6 +1,22 @@
-// gameState.js
 
-// Main game state object
+/**
+ * @fileoverview Defines the main game state object for Memory Ascension, including resources, upgrades, automation, and meta progression.
+ * @module core/gameState
+ */
+
+/**
+ * Main game state object containing all persistent and runtime state for the player.
+ * @type {{
+ *   resources: Object,
+ *   upgrades: {
+ *     owned: Set<string>,
+ *     conversionBonuses: Object
+ *   },
+ *   generation: Object,
+ *   systems: Object,
+ *   meta: Object
+ * }}
+ */
 export const gameState = {
   // All player resources by tier
   resources: {

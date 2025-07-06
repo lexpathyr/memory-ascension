@@ -1,11 +1,26 @@
-// programExecutor.js
+
+/**
+ * @fileoverview Handles execution, ticking, and management of running programs in Memory Ascension.
+ * @module data/programs/programExecutor
+ */
 
 import { gameState } from '../../core/gameState.js';
 import { requestTierUpdate } from '../../ui/uiRenderer.js';
 import { programSchemas } from './programSchemas.js';
 
+
+/**
+ * Map of currently running programs, keyed by program id.
+ * @type {Map<string, Object>}
+ */
 const runningPrograms = new Map();
 
+
+/**
+ * Checks if a program is unlocked based on prestige and schema requirements.
+ * @param {string} key - Program key.
+ * @returns {boolean}
+ */
 function isProgramUnlocked(key) {
   const prestige = gameState.meta.prestigeCurrency || 0;
   return programSchemas.some(schema => 
@@ -13,6 +28,11 @@ function isProgramUnlocked(key) {
   );
 }
 
+/**
+ * Attempts to run a program, deducting resources and cycles, and tracking its state.
+ * @param {Object} program - Program definition object.
+ * @returns {boolean} True if program started, false otherwise.
+ */
 export function runProgram(program) {
   const { key, name, cost, dataRequired, duration, effect, permanent } = program;
 
@@ -69,6 +89,9 @@ export function runProgram(program) {
   return true;
 }
 
+/**
+ * Advances all running programs by one tick, applying effects and removing finished programs.
+ */
 export function tickPrograms() {
   for (let [key, prog] of runningPrograms) {
     if (prog.permanent) continue;
@@ -85,6 +108,10 @@ export function tickPrograms() {
   }
 }
 
+/**
+ * Cancels a running program, refunding locked resources.
+ * @param {string} key - Program key to cancel.
+ */
 export function cancelProgram(key) {
   const prog = runningPrograms.get(key);
   if (!prog) return;
@@ -99,6 +126,10 @@ export function cancelProgram(key) {
   requestTierUpdate();
 }
 
+/**
+ * Returns an array of all currently running program objects.
+ * @returns {Array<Object>}
+ */
 export function getRunningPrograms() {
   return [...runningPrograms.values()];
 }

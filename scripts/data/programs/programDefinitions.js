@@ -1,12 +1,31 @@
+
+/**
+ * @fileoverview Defines all program definitions for Memory Ascension, including their costs, durations, and effects.
+ * @module data/programs/programDefinitions
+ */
+
 import { gameState } from '../../core/gameState.js';
 import { programTemplates } from './programTemplates.js';
 
-// Utility to create a standard program definition
+/**
+ * Utility to create a standard program definition object.
+ * @param {string} key - Unique program key.
+ * @param {string} name - Program display name.
+ * @param {number} cost - Cycle cost to run the program.
+ * @param {Object<string, number>} dataRequired - Resource requirements to run.
+ * @param {number|null} duration - Duration in seconds, or null for permanent.
+ * @param {Function} effectFn - Effect function to apply.
+ * @returns {{key: string, name: string, cost: number, dataRequired: Object, duration: number|null, effect: Function}}
+ */
 export function createProgram(key, name, cost, dataRequired, duration, effectFn) {
   return { key, name, cost, dataRequired, duration, effect: effectFn };
 }
 
 
+/**
+ * All program definitions, keyed by program id.
+ * @type {Object.<string, Object>}
+ */
 export const programDefinitions = {
   optimizeMemory: createProgram(
     "optimizeMemory",

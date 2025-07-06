@@ -5,6 +5,12 @@ import { requestTierUpdate } from '../ui/uiRenderer.js';
 import { applyPartBonuses } from './rigManager.js';
 import { initializeThemeToggleText } from './themeManager.js';
 
+
+/**
+ * @fileoverview Handles saving, loading, exporting, importing, and resetting game state for Memory Ascension.
+ * @module managers/saveManager
+ */
+
 const SAVE_KEY = "memAscendSave";
 
 // 🧱 Default resource scaffold to ensure all expected keys exist
@@ -49,8 +55,9 @@ const defaultMeta = {
   storageSlots: 1
 };
 
-// 🚀 Save game to localStorage
-// Save game to localStorage (serializes Sets as arrays)
+/**
+ * Saves the current game state to localStorage (serializes Sets as arrays).
+ */
 export function saveGame() {
   const saveData = {
     gameState: {
@@ -73,8 +80,10 @@ export function saveGame() {
   localStorage.setItem(SAVE_KEY, JSON.stringify(saveData));
 }
 
-// 🔄 Load game and merge with defaults
-// Load game and merge with defaults
+/**
+ * Loads the game state from localStorage and merges with defaults.
+ * Re-applies all upgrade effects and updates UI.
+ */
 export function loadGame() {
   const saved = JSON.parse(localStorage.getItem(SAVE_KEY));
   if (!saved || !saved.gameState) return;
@@ -160,8 +169,9 @@ export function loadGame() {
   requestTierUpdate();
 }
 
-// 🧼 Reset game to default state
-// Reset game to default state
+/**
+ * Resets the game to default state, clearing localStorage and reloading the page.
+ */
 export function resetGame() {
   if (!confirm("Are you sure? This will wipe everything.")) return;
 
@@ -179,7 +189,9 @@ export function resetGame() {
   location.reload();
 }
 
-// 📦 Export save to file
+/**
+ * Exports the current save to a downloadable JSON file.
+ */
 export function exportSave() {
   const data = localStorage.getItem(SAVE_KEY);
   const blob = new Blob([data], { type: "application/json" });
@@ -194,11 +206,17 @@ export function exportSave() {
   URL.revokeObjectURL(url);
 }
 
-// 📥 Import save from file
+/**
+ * Triggers the file input for importing a save file.
+ */
 export function importSave() {
   document.getElementById("importFile").click();
 }
 
+/**
+ * Handles importing a save file from the user's computer.
+ * @param {Event} event - File input change event.
+ */
 export function handleImportFile(event) {
   const file = event.target.files[0];
   if (!file) return;
@@ -226,11 +244,17 @@ export function handleImportFile(event) {
 }
 
 // 🔁 Minor UI helpers
+/**
+ * Updates the display and saves the game state.
+ */
 export function refreshGameState() {
   updateDisplay();
   saveGame();
 }
 
+/**
+ * Checks and updates UI unlocks (e.g., terminal tab visibility) based on meta progression.
+ */
 export function checkUnlocks() {
   const terminalTab = document.getElementById("tabTerminal");
   if (terminalTab && (gameState.meta.prestigeCurrency || 0) >= 50) {
