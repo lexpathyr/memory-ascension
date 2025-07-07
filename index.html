@@ -8,8 +8,9 @@
   <link rel="stylesheet" href="main.css" />
 </head>
 <body>
+
+  <!-- 🧠 Header -->
   <header class="sticky-header" role="banner">
-    <!-- Controls moved to footer -->
     <h1 class="game-title" tabindex="0">Memory Ascension</h1>
     <section class="cycle-display" aria-label="Cycle and resource display">
       <div class="recompile-wrapper">
@@ -19,17 +20,20 @@
     </section>
   </header>
 
+  <!-- 🧭 Tab Navigation -->
   <nav id="tabNav" class="tab-nav" aria-label="Main navigation">
     <button id="tabMemory" class="tab-button active" aria-controls="memoryPanel" aria-selected="true" tabindex="0">Memory</button>
     <button id="tabTerminal" class="tab-button" style="display: none;" aria-controls="terminalPanel" aria-selected="false" tabindex="0">Computing</button>
   </nav>
 
+  <!-- 🔧 Main Content Panels -->
   <main>
     <section id="memoryPanel" aria-labelledby="tabMemory">
       <div id="tiers"></div>
     </section>
     <section id="upgradeRack" class="upgrade-rack" aria-label="Upgrades"></section>
     <section id="rigStatsDisplay" class="rig-stats" aria-label="Rig Stats"></section>
+
     <section id="terminalPanel" class="terminal-panel" aria-labelledby="tabTerminal" hidden>
       <button id="closeTerminal" class="terminal-close" aria-label="Close terminal">×</button>
       <pre id="terminalOutput" tabindex="0">[terminal ready]</pre>
@@ -37,22 +41,69 @@
     </section>
   </main>
 
+  <!-- 🧰 Footer Controls -->
   <footer>
     <div class="footer-controls-wrapper">
       <div class="controls-dropdown controls-footer">
-        <button id="controlsToggle" aria-haspopup="true" aria-expanded="false" aria-controls="controlsMenu" aria-label="Show game controls">☰ Controls</button>
-        <nav id="controlsMenu" class="controls-menu controls-menu-up" aria-label="Game controls" hidden>
+        <button
+          id="controlsToggle"
+          aria-haspopup="true"
+          aria-expanded="false"
+          aria-controls="controlsMenu"
+          aria-label="Show game controls"
+        >
+          ☰ Controls
+        </button>
+
+        <nav
+          id="controlsMenu"
+          class="controls-menu controls-menu-up"
+          aria-label="Game controls"
+          hidden
+        >
           <button id="themeToggle" aria-label="Toggle light/dark mode">Light Mode</button>
           <button id="exportBtn" aria-label="Export save">Export Save</button>
           <button id="importBtn" aria-label="Import save">Import Save</button>
-          <input type="file" id="importFile" style="display:none;" aria-label="Import file" />
+          <input type="file" id="importFile" style="display: none" aria-label="Import file" />
           <button id="resetBtn" aria-label="Reset game">Reset</button>
+          <button id="themeSettingsBtn" aria-label="Customize theme colors">Theme Settings</button>
         </nav>
       </div>
     </div>
-    <span class="footer-copyright">© 2025 Memory Ascension</span>
+
+    <span class="footer-copyright">
+      © 2025 Memory Ascension
+    </span>
   </footer>
 
+  <!-- 🎨 Theme Settings Modal -->
+  <div id="themeSettingsModal" class="theme-modal" hidden>
+    <div class="theme-modal-content" role="dialog" aria-modal="true" aria-label="Theme settings">
+      <button id="closeThemeModal" aria-label="Close theme settings" class="close-theme-btn">×</button>
+      <fieldset id="colorCustomizers" aria-label="Theme Customization">
+        <legend>Theme Colors</legend>
+        <label>Background Color: <input type="color" id="bgColorPicker" /></label>
+        <label>Text Color: <input type="color" id="textColorPicker" /></label>
+        <label>Button Color: <input type="color" id="buttonColorPicker" /></label>
+        <label>Button Hover: <input type="color" id="buttonHoverPicker" /></label>
+        <label>Card Background: <input type="color" id="cardBgPicker" /></label>
+        <label>Upgrade Background: <input type="color" id="upgradeBgPicker" /></label>
+        <label>Upgrade Text Color: <input type="color" id="upgradeTextPicker" /></label>
+        <label>Upgrade Hover: <input type="color" id="upgradeHoverPicker" /></label>
+        <label>Slider Background: <input type="color" id="sliderBgPicker" /></label>
+        <label>Slider Active: <input type="color" id="sliderActivePicker" /></label>
+        <label>Slider Knob: <input type="color" id="sliderKnobPicker" /></label>
+      </fieldset>
+      <div class="theme-modal-actions">
+        <button id="resetThemeBtn">Reset to Defaults</button>
+        <button id="exportThemeBtn">Export Theme</button>
+        <button id="importThemeBtn">Import Theme</button>
+        <input type="file" id="importThemeFile" accept="application/json" hidden />
+      </div>
+    </div>
+  </div>
+
+  <!-- 🧠 Logic Bootstrap -->
   <script type="module" src="./main.js"></script>
 
 </body>

@@ -9,7 +9,7 @@
 
 import { loadGame, saveGame, importSave, exportSave, resetGame, handleImportFile } from './scripts/managers/saveManager.js';
 import { updateDisplay } from './scripts/managers/displayManager.js';
-import { toggleTheme, initializeThemeToggleText } from './scripts/managers/themeManager.js';
+import { toggleTheme, initializeThemeToggleText, initializeColorCustomizers } from './scripts/managers/themeManager.js';
 import { generateBit, gameTick } from './scripts/core/engine.js';
 import { recompile } from './scripts/prestige/recompile.js';
 import { runProgram, getRunningPrograms } from './scripts/data/programs/programExecutor.js';
@@ -58,6 +58,7 @@ window.onload = () => {
   buildTierLayout();
   requestTierUpdate();
   initializeThemeToggleText();
+  initializeColorCustomizers();
 
   gameTick();
   setInterval(gameTick, 100);
@@ -70,6 +71,12 @@ window.onload = () => {
       document.getElementById("tabTerminal").style.display = "none";
     }
   }, 100);
+
+  setTimeout(() => {
+  if (document.getElementById("colorCustomizers")) {
+    initializeColorCustomizers();
+  }
+}, 0);
 
   document.getElementById("themeToggle").onclick = toggleTheme;
   document.getElementById("recompileBtn").onclick = recompile;
@@ -130,6 +137,22 @@ window.onload = () => {
     document.getElementById("upgradeRack").style.display = "none";
     document.getElementById("rigStatsDisplay").style.display = "none";
   };
+
+  document.getElementById("themeSettingsBtn").addEventListener("click", () => {
+    document.getElementById("themeSettingsModal").removeAttribute("hidden");
+  });
+
+  document.getElementById("closeThemeModal").addEventListener("click", () => {
+    document.getElementById("themeSettingsModal").setAttribute("hidden", "");
+  });
+
+  // Optional: close modal on outside click
+  document.addEventListener("click", (e) => {
+    const modal = document.getElementById("themeSettingsModal");
+    if (!modal.hidden && !modal.contains(e.target) && e.target.id !== "themeSettingsBtn") {
+      modal.setAttribute("hidden", "");
+    }
+  });
 
   /**
    * Handle terminal input commands for the in-game terminal panel.
@@ -285,5 +308,91 @@ window.onload = () => {
       controlsMenu.setAttribute("hidden", "");
       controlsToggle.setAttribute("aria-expanded", "false");
     }
+  });
+
+  // Theme modal actions
+  document.getElementById("resetThemeBtn").addEventListener("click", () => {
+    const defaults = {
+      customBg: "#0d0d0d",
+      customText: "lime",
+      customButton: "#222222",
+      customButtonHover: "#333333",
+      cardBg: "#111111",
+      upgradeBg: "lime",
+      upgradeText: "black",
+      upgradeHoverBg: "#0ee80e",
+      sliderBg: "#444444",
+      sliderActive: "lime",
+      sliderKnob: "black",
+      theme: "custom"
+    };
+
+    for (const [key, value] of Object.entries(defaults)) {
+      localStorage.setItem(key, value);
+      const varName = {
+        customBg: "--bg-color",
+        customText: "--text-color",
+        customButton: "--button-bg",
+        customButtonHover: "--button-hover-bg",
+        cardBg: "--card-bg",
+        upgradeBg: "--upgrade-bg",
+        upgradeText: "--upgrade-text",
+        upgradeHoverBg: "--upgrade-hover-bg",
+        sliderBg: "--slider-bg",
+        sliderActive: "--slider-active",
+        sliderKnob: "--slider-knob"
+      }[key];
+
+      if (varName) {
+        document.documentElement.style.setProperty(varName, value);
+      }
+      initializeColorCustomizers();
+    }
+
+    document.getElementById("themeToggle").textContent = "Custom Mode";
+  });
+
+  document.getElementById("exportThemeBtn").addEventListener("click", () => {
+    const themeKeys = [
+      "customBg", "customText", "customButton", "customButtonHover",
+      "cardBg", "upgradeBg", "upgradeText", "upgradeHoverBg",
+      "sliderBg", "sliderActive", "sliderKnob", "theme"
+    ];
+    const theme = {};
+    themeKeys.forEach(key => {
+      theme[key] = localStorage.getItem(key) || "";
+    });
+
+    const blob = new Blob([JSON.stringify(theme, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "MemoryThemePreset.json";
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  document.getElementById("importThemeBtn").addEventListener("click", () => {
+    document.getElementById("importThemeFile").click();
+  });
+
+  document.getElementById("importThemeFile").addEventListener("change", event => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        const parsed = JSON.parse(e.target.result);
+        Object.entries(parsed).forEach(([key, value]) => {
+          localStorage.setItem(key, value);
+        });
+        initializeColorCustomizers(); // Refresh pickers
+        document.getElementById("themeToggle").textContent = "Custom Mode";
+      } catch (err) {
+        alert("Invalid theme file.");
+      }
+    };
+    reader.readAsText(file);
   });
 };
